@@ -33,7 +33,7 @@ Class SearchResult
 End Class
 
 ''' Defines a contract for web search providers.
-Public Interface ISearchProvider
+Interface ISearchProvider
     Function SearchAsync(query As String, count As Integer) As Task(Of List(Of SearchResult))
 End Interface
 
@@ -46,7 +46,7 @@ Class BingSearchProvider
     Private ReadOnly cache As ConcurrentDictionary(Of String, (Results As List(Of SearchResult), Timestamp As DateTime))
     Private ReadOnly cacheDuration As TimeSpan = TimeSpan.FromMinutes(5)
 
-    Public Sub New()
+    Sub New()
         client = New HttpClient()
         client.DefaultRequestHeaders.Add("Ocp-Apim-Subscription-Key", ApiKey)
         cache = New ConcurrentDictionary(Of String, (List(Of SearchResult), DateTime))
@@ -122,7 +122,7 @@ Class DuckDuckGoSearchProvider
         Return ParseDuckResults(json, count)
     End Function
 
-    Private Function ParseDuckResults(json As String, count As Integer) As List(Of SearchResult)
+    Function ParseDuckResults(json As String, count As Integer) As List(Of SearchResult)
         Dim results = New List(Of SearchResult)
         Using doc = JsonDocument.Parse(json)
             Dim root = doc.RootElement
@@ -197,7 +197,7 @@ Class DeepSeekAssistant
         End Try
     End Function
 
-    Private Function ShouldSearchWeb(input As String) As Boolean
+    Function ShouldSearchWeb(input As String) As Boolean
         Dim triggers = {"search", "latest", "news", "today", "current", "weather", "stock", "price", "update", "recent", "find", "who is", "what is"}
         For Each word In triggers
             If input.IndexOf(word, StringComparison.OrdinalIgnoreCase) >= 0 Then Return True
@@ -205,7 +205,7 @@ Class DeepSeekAssistant
         Return False
     End Function
 
-    Private Function BuildSearchContext(results As List(Of SearchResult)) As String
+    Function BuildSearchContext(results As List(Of SearchResult)) As String
         Dim sb = New System.Text.StringBuilder()
         For i = 0 To results.Count - 1
             Dim r = results(i)
@@ -249,7 +249,7 @@ Class SearchCacheManager
     Private Shared cache As ConcurrentDictionary(Of String, (Results As List(Of SearchResult), Timestamp As DateTime))
     Private Shared ReadOnly expiration As TimeSpan = TimeSpan.FromMinutes(10)
 
-    Public Shared Sub Start(cacheInstance As ConcurrentDictionary(Of String, (List(Of SearchResult), DateTime)))
+    Shared Sub Start(cacheInstance As ConcurrentDictionary(Of String, (List(Of SearchResult), DateTime)))
         cache = cacheInstance
         timer = New System.Timers.Timer(60000) ' every minute
         AddHandler timer.Elapsed, AddressOf CleanCache
